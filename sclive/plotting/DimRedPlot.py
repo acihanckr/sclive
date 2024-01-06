@@ -1,5 +1,4 @@
 from anndata import AnnData, read_h5ad
-from sclive.plotting import plot_defaults
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -7,6 +6,7 @@ import scipy
 from distinctipy import get_colors, get_hex
 from pandas.api.types import is_numeric_dtype
 from typing import List, Optional
+from .plotting_data import plot_defaults
 
 class DimRedPlot:
     '''
@@ -237,7 +237,7 @@ class DimRedPlot:
             elif "meta_order" in plot_defaults:
                 meta_order = plot_defaults["meta_order"]
             else:
-                meta_order = self.data["meta_vals"].unique().to_list()
+                meta_order = self.data["meta_vals"].unique().tolist()
         
         if not self.cont_type and meta_colors == None:
             if hasattr(self, "meta_colors"):
@@ -245,7 +245,7 @@ class DimRedPlot:
             elif "meta_colors" in plot_defaults:
                 meta_colors = plot_defaults["meta_colors"]
             else:
-                meta_colors = [get_hex(c) for c in get_colors(len(self.data["meta_vals"].unique().to_list()))]
+                meta_colors = [get_hex(c) for c in get_colors(len(self.data["meta_vals"].unique().tolist()))]
         
         if selected_barcodes == None:
             if hasattr(self, "selected_barcodes"):
@@ -320,8 +320,8 @@ class DimRedPlot:
 
         
         # if data is subsetted add grey points otherwise create empty figure
-        if not selected_barcodes:
-            plotting_data_removed = self.data.loc[~adata.obs.index.to_series().isin(selected_barcodes),:]
+        if selected_barcodes:
+            plotting_data_removed = self.data.loc[~self.data.index.to_series().isin(selected_barcodes),:]
             plotting_data = self.data.loc[selected_barcodes,:]
             fig = go.Figure(go.Scatter(x = plotting_data_removed["X"],
                         y = plotting_data_removed["Y"], 
@@ -334,11 +334,11 @@ class DimRedPlot:
             fig = go.Figure()
         
         # add selected cell to the plot
-        if self.cont_type:
+        if not self.cont_type:
             colors = {k:v for k,v in zip(meta_order, meta_colors)}
-            for i, meta_category in enumerate(list(plotting_data.val.unique())):
-                fig.add_trace(go.Scatter(x = plotting_data.loc[plotting_data.val==meta_category,"X"],
-                    y = plotting_data.loc[plotting_data.val==meta_category,"Y"], 
+            for i, meta_category in enumerate(list(plotting_data.meta_vals.unique())):
+                fig.add_trace(go.Scatter(x = plotting_data.loc[plotting_data.meta_vals==meta_category,"X"],
+                    y = plotting_data.loc[plotting_data.meta_vals==meta_category,"Y"], 
                     mode="markers+text",
                     hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Category: </b>"+str(meta_category)+"<extra></extra>",
                     marker={"size":pt_size, "color":colors[str(meta_category)]}, name=str(meta_category)))
@@ -349,9 +349,9 @@ class DimRedPlot:
                     showlegend=False,
                     hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Value: </b>%{marker.color:.2f}<extra></extra>",
                     marker={"size":pt_size,
-                            "color":plotting_data.val,
-                            "cmin":plotting_data.val.min(),
-                            "cmax":plotting_data.val.max(),
+                            "color":plotting_data.meta_vals,
+                            "cmin":plotting_data.meta_vals.min(),
+                            "cmax":plotting_data.meta_vals.max(),
                             "colorscale":cont_color,
                             "showscale":True}))
         
