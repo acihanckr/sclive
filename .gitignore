@@ -160,4 +160,5 @@ cython_debug/
 #.idea/
 
 
-Pipfile.lock
+poetry.lock
+/test_data
