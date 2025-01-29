@@ -4,7 +4,7 @@ import polars as pl
 from anndata import AnnData
 def get_metas(adata:AnnData, 
               meta_ids:List[str], 
-              cat:Optional[bool]=None):
+              cat:Optional[bool]=None)->pl.DataFrame:
     '''
     Extract meta data from AnnData object and return as Polars DataFrame
     

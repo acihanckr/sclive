@@ -8,7 +8,7 @@ from anndata import AnnData
 def get_gene_exprs(adata:AnnData, 
                    genes:List[str], 
                    use_raw:Optional[bool]=False, 
-                   layer:Optional[str] = None):
+                   layer:Optional[str] = None)->pl.DataFrame:
     '''
     Extract gene expression data from an AnnData object.
     
