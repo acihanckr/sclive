@@ -161,5 +161,6 @@ cython_debug/
 
 
 poetry.lock
-/test_data
+/docs/make.bat
+/docs/Makefile
 /docs/_build

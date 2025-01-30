@@ -3,7 +3,7 @@ import numpy as np
 import scanpy as sc
 import pytest
 
-#@pytest.fixture(scope="session")
+@pytest.fixture(scope="session")
 def scanpy_std_pipeline():
     if not os.path.exists("test_data/pbmc.h5ad"):         
         adata = sc.read_10x_mtx("test_data/pbmc")
@@ -35,5 +35,3 @@ def scanpy_std_pipeline():
         sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
         sc.tl.rank_genes_groups(adata, groupby="leiden", method="wilcoxon")
         adata.write("test_data/pbmc.h5ad")
-
-scanpy_std_pipeline()
