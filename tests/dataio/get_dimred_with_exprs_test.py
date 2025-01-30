@@ -1,4 +1,4 @@
-from sclive.adata.get_dimred_with_exprs_func import get_dimred_with_exprs
+from sclive.dataio.get_dimred_with_exprs_func import get_dimred_with_exprs
 from scanpy import read_h5ad
 
 def test_get_dimred_with_exprs():

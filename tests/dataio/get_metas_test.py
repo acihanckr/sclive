@@ -1,4 +1,4 @@
-from sclive.adata import get_metas
+from sclive.dataio import get_metas
 from scanpy import read_h5ad
 
 def test_get_metas():

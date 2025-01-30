@@ -1,4 +1,4 @@
-from sclive.adata.get_gene_exprs_func import get_gene_exprs
+from sclive.dataio.get_gene_exprs_func import get_gene_exprs
 from scanpy import read_h5ad
 
 def test_get_gene_exprs():

@@ -1,4 +1,4 @@
-from sclive.adata.get_dimred_with_metas_func import get_dimred_with_metas
+from sclive.dataio.get_dimred_with_metas_func import get_dimred_with_metas
 from scanpy import read_h5ad
 
 
