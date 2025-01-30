@@ -162,3 +162,4 @@ cython_debug/
 
 poetry.lock
 /test_data
+/docs/_build
