@@ -1,2 +1,1 @@
-import sclive.plotting.DimRedPlot as DimRedPlot
-
+from .dimred_plt_2d_func import dimred_plt_2d
