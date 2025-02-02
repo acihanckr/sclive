@@ -37,13 +37,14 @@ def set_2d_layout(fig: Figure,
         Figure with the layout set with the given parameters
     '''
 
-    
+    if title_size is None:
+        title_size = 0
     fig.update_layout(
         margin=dict(
             l=5,
             r=5,
             b=10,
-            t=10,
+            t=10+title_size,
             pad=4
         ),
         paper_bgcolor="LightSteelBlue",
