@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sclive"
-version = "0.0.1a1"
+version = "0.0.1"
 description = "Single cell analysis plotting function with interactive and web development friendly outputs."
 authors = ["Adnan Cihan Cakar <cakar.adnancihan@gmail.com>"]
 readme = "README.md"
