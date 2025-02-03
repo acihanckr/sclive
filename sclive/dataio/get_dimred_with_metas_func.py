@@ -1,5 +1,4 @@
 import polars as pl
-import pandas as pd
 from anndata import AnnData
 from typing import List, Optional
 from .get_metas_func import get_metas

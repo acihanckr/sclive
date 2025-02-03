@@ -1,6 +1,5 @@
 import random
 import pandas as pd
-import scanpy as sc
 from anndata import read_h5ad
 from sclive.plotting.dimred_plt_2d_func import dimred_plt_2d
 
