@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sclive"
-version = "0.0.1a1"
+version = "0.0.1"
 description = "Single cell analysis plotting function with interactive and web development friendly outputs."
 authors = ["Adnan Cihan Cakar <cakar.adnancihan@gmail.com>"]
 readme = "README.md"
@@ -21,7 +21,6 @@ ruff = "^0.8.4"
 
 [tool.poetry.group.dev.dependencies]
 scanpy = {extras = ["leiden"], version = "^1.10.4"}
-ipykernel = "^6.29.5"
 
 [tool.poetry.group.docs.dependencies]
 ipykernel = "^6.29.5"
