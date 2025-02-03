@@ -91,7 +91,8 @@ def dimred_plt_2d(adata: AnnData,
         dimred_id_suffix = ""
     if comps is None:
         comps = [0,1]
-    
+    if title_size is not None and title is None:
+        title = meta_id + " Dimension Reduction Plot"
     #extract meta data from Annotated Data deciding if it is meta data or gene expression
     if is_gene_exp or meta_id not in adata.obs.columns.to_list():
         dimred_data = dataio.get_dimred_with_exprs(adata, dimred_id, [meta_id], comps, use_raw, dimred_id_suffix, layer)
@@ -100,8 +101,8 @@ def dimred_plt_2d(adata: AnnData,
     cat = dimred_data[meta_id].dtype == pl.Categorical
     
     if selected_barcodes and len(selected_barcodes) > 0:
-            plotting_data_removed = dimred_data.filter(~pl.col("barcodes").isin(selected_barcodes))
-            plotting_data = dimred_data.filter(pl.col("barcodes").isin(selected_barcodes))
+            plotting_data_removed = dimred_data.filter(~pl.col("barcode").is_in(selected_barcodes))
+            plotting_data = dimred_data.filter(pl.col("barcode").is_in(selected_barcodes))
             fig = go.Figure(go.Scatter(x = plotting_data_removed["X"],
                         y = plotting_data_removed["Y"], 
                         mode="markers+text",
@@ -161,7 +162,7 @@ def dimred_plt_2d(adata: AnnData,
     # set axis text size and legend text size
     if dimred_labels is None:
         dimred_labels = [f'{dimred_id_suffix + dimred_id}_{i}' for i in comps]
-    elif isinstance(dimred_labels):
+    elif isinstance(dimred_labels, str):
         dimred_labels = [f'{dimred_labels}_{i}' for i in comps]
     elif not isinstance(dimred_labels, list) or any(not isinstance(item, str) for item in dimred_labels):
         raise ValueError("dimred_labels must be a string or a list of strings")

@@ -4,14 +4,14 @@ import pytest
 
 def test_get_metas(scanpy_std_pipeline):
     adata = read_h5ad("test_data/pbmc.h5ad")
-    adata_meta = get_metas(adata, meta_ids = ["leiden"])
-    adata_meta = get_metas(adata, meta_ids = ["leiden"], cat=True)
-    adata_meta = get_metas(adata, meta_ids = ["leiden", "fake_cats"])
-    adata_meta = get_metas(adata, meta_ids = ["leiden", "fake_cats"], cat=True)
-    adata_meta = get_metas(adata, meta_ids = ["total_counts"])
-    adata_meta = get_metas(adata, meta_ids = ["total_counts"], cat=False)
-    adata_meta = get_metas(adata, meta_ids = ["total_counts", "total_counts_mt"])
-    adata_meta = get_metas(adata, meta_ids = ["total_counts", "total_counts_mt"], cat=False)
+    get_metas(adata, meta_ids = ["leiden"])
+    get_metas(adata, meta_ids = ["leiden"], cat=True)
+    get_metas(adata, meta_ids = ["leiden", "fake_cats"])
+    get_metas(adata, meta_ids = ["leiden", "fake_cats"], cat=True)
+    get_metas(adata, meta_ids = ["total_counts"])
+    get_metas(adata, meta_ids = ["total_counts"], cat=False)
+    get_metas(adata, meta_ids = ["total_counts", "total_counts_mt"])
+    get_metas(adata, meta_ids = ["total_counts", "total_counts_mt"], cat=False)
     with pytest.raises(ValueError):
-        adata_meta = get_metas(adata, meta_ids = ["total_counts", "fake_cats"])
+        get_metas(adata, meta_ids = ["total_counts", "fake_cats"])
 print("done")
