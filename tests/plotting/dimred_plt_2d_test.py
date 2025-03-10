@@ -49,6 +49,3 @@ def test_dimred_plt_2d(scanpy_std_pipeline):
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12, title="Test", axis_font_size=12).write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12, title="Test", axis_font_size=12, dimred_labels="PCA").write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12, title="Test", axis_font_size=12, dimred_labels=["PC1", "PC2"], ticks_font_size=12).write_html("fig.html")
-
-test_dimred_plt_2d(None)
-print("dimred_plt_2d test passed")

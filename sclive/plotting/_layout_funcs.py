@@ -100,7 +100,7 @@ def set_3d_layout(fig: Figure,
                   title_size:Optional[int] = None,
                   title:Optional[str] = None,
                   plt_size:Optional[int] = 480,
-                  cube: Optional[str] = "cube")->Figure:
+                  aspectmode: Optional[str] = "cube")->Figure:
     '''
     Sets the layout of the 3D plotly figure.
     :param fig:
@@ -119,7 +119,7 @@ def set_3d_layout(fig: Figure,
         Title of the plot
     :param plt_size: 
         Size of the plot (default is 480)
-    :param cube:
+    :param aspectmode:
         Aspect mode of the plot (default is "cube")
     Returns:
     --------
@@ -138,7 +138,7 @@ def set_3d_layout(fig: Figure,
         scene=dict(xaxis=dict(tickfont=dict(size=ticks_font_size)),
         yaxis=dict(tickfont=dict(size=ticks_font_size)),
         zaxis=dict(tickfont=dict(size=ticks_font_size)),
-        aspectmode = cube),
+        aspectmode = aspectmode),
         height=plt_size
     )
     if axis_font_size and dimred_labels:
@@ -150,8 +150,7 @@ def set_3d_layout(fig: Figure,
                 xaxis_title_font = dict(size=axis_font_size),
                 yaxis_title_font = dict(size=axis_font_size),
                 zaxis_title_font = dict(size=axis_font_size)
-            )    
-        )
+            ))
     else:
         fig.update_layout(
             scene = dict(

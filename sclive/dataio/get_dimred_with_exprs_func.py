@@ -50,7 +50,7 @@ def get_dimred_with_exprs(adata:AnnData,
     if dimred_id_suffix + dimred_id not in adata.obsm_keys():
             raise(ValueError("Given dimention reduction with the suffix is not found in Annotated Data!"))
     else:
-        dimred_data = (pl.DataFrame(adata.obsm[dimred_id_suffix + dimred_id][:,comps], schema=["X","Y"])
+        dimred_data = (pl.DataFrame(adata.obsm[dimred_id_suffix + dimred_id][:,comps], schema=["X","Y", "Z"][:len(comps)])
                        .with_columns(pl.Series(name="barcode", values=adata.obs_names).cast(pl.String)))
 
     if len(not_avail_genes) == len(genes):
