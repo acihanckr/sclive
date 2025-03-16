@@ -8,6 +8,7 @@ def test_prop_plt(scanpy_std_pipeline):
     prop_plt(adata, "leiden", "fake_cats", plt_type="pct").write_html("fig.html")
     prop_plt(adata, "fake_dogs", "fake_dogs", plt_type="count").write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count").write_html("fig.html")
+    prop_plt(adata, "leiden", "fake_cats", plt_type="count", stacked=False).write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count", coord_flip=True, axis_font_size=None).write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count", width = 400).write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count", width = 400, height= 80).write_html("fig.html")
