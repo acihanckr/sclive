@@ -18,9 +18,6 @@ jobs:
     - name: Install Dependencies with Poetry
       run: |
           poetry install --sync --no-interaction
-    - name: Install pandoc
-      run: |
-          apt-get update && apt-get install -y pandoc
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
     - name: Upload artifacts
