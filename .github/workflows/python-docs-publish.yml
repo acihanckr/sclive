@@ -15,7 +15,11 @@ jobs:
       run: |
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH  
+    - name: Install Dependencies with Poetry
+      run: |
           poetry install --sync --no-interaction
+    - name: Install pandoc
+      run: |
           apt-get update && apt-get install -y pandoc
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
