@@ -18,6 +18,9 @@ jobs:
     - name: Install Dependencies with Poetry
       run: |
           poetry install --sync --no-interaction --with docs
+    - name: Upgrade pip
+      run: |
+          pip install --upgrade pip
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
     - name: Upload artifacts
