@@ -33,31 +33,53 @@ def dimred_plt_3d(adata: AnnData,
                 plt_size: Union[int,float,str] = 480) -> go.Figure:
     """
     Creates a 3D scatter plot of the dimension reduction and meta id which can be an annotation or gene expression based on the given annotated data.
-    Parameters:
-    -----------  
-    :param adata: annotated data object the dimention reduction plot to be based on 
-    :param dimred_id: dimension reduction to use for scatter plot
-    :param meta_id: which obs meta feature or the gene expression to use for colors 
-    :param comps: which of the components of the dimension reduction to use. Default is first two
-    :param selected_barcodes: which data points to color. Remaining data points will be drawn grey with 0.5 opacity
-    :param layer: which layer to extract gene expression data from. It is ignored for meta_id from obs
-    :param use_raw: either to use raw gene expression or scaled. See scanpy for more details
-    :param cat: if meta_id is category or continuous. If not provided or None, this will be inferred using polars column types
-    :param dimred_id_suffix: if a suffix is added to dimred_id in the annotated data. For example "X_" if scanpy is used for preprocess
-    :param is_gene_exp: is the given meta id a gene expression
-    :param cont_color: color gradient scale for continuous cell meta or gene expression. Can be anything Plotly graph object accepts
-    :param meta_order: order of cell meta feature categories. This determines the order traces are added to figure and may cause some points covering other.
-    :param meta_colors: colors to use for categorical obs meta. If not provided it will be set randomly using distinctpy library
-    :param title: title for the plot
-    :param dimred_labels: the label of the dimension reduction axes
-    :param pt_size: size of points in scatter plot 
-    :param ticks_font_size: size of tick labels on x and y axis
-    :param axis_font_size: font size of the axis labels. If not provided or None, axis labels will be omitted 
-    :param labels_size: font size of labels for categorical meta. If set to False, labels won't be drawn
-    :param legend_size: font size for legend. If set to False, legend will be hidden.
-    :param title_size: font size for title. If set to False, legend will be hidden.
-    :param aspectmode: plotly 3d scatter plot aspectmode variable to use for the plot. Default is cube
-    :param plt_size: size of the plot. Default is 480
+    
+    :param adata: 
+        annotated data object the dimention reduction plot to be based on 
+    :param dimred_id: 
+        dimension reduction to use for scatter plot
+    :param meta_id: 
+        which obs meta feature or the gene expression to use for colors 
+    :param comps: 
+        which of the components of the dimension reduction to use. Default is first two
+    :param selected_barcodes: 
+        which data points to color. Remaining data points will be drawn grey with 0.5 opacity
+    :param layer: 
+        which layer to extract gene expression data from. It is ignored for meta_id from obs
+    :param use_raw: 
+        either to use raw gene expression or scaled. See scanpy for more details
+    :param cat: 
+        if meta_id is category or continuous. If not provided or None, this will be inferred using polars column types
+    :param dimred_id_suffix: 
+        if a suffix is added to dimred_id in the annotated data. For example "X_" if scanpy is used for preprocess
+    :param is_gene_exp: 
+        is the given meta id a gene expression
+    :param cont_color: 
+        color gradient scale for continuous cell meta or gene expression. Can be anything Plotly graph object accepts
+    :param meta_order: 
+        order of cell meta feature categories. This determines the order traces are added to figure and may cause some points covering other.
+    :param meta_colors: 
+        colors to use for categorical obs meta. If not provided it will be set randomly using distinctpy library
+    :param title: 
+        title for the plot
+    :param dimred_labels: 
+        the label of the dimension reduction axes
+    :param pt_size: 
+        size of points in scatter plot 
+    :param ticks_font_size: 
+        size of tick labels on x and y axis
+    :param axis_font_size: 
+        font size of the axis labels. If not provided or None, axis labels will be omitted 
+    :param labels_size: 
+        font size of labels for categorical meta. If set to False, labels won't be drawn
+    :param legend_size: 
+        font size for legend. If set to False, legend will be hidden.
+    :param title_size: 
+        font size for title. If set to False, legend will be hidden.
+    :param aspectmode: 
+        plotly 3d scatter plot aspectmode variable to use for the plot. Default is cube
+    :param plt_size: 
+        size of the plot. Default is 480
     
     Returns:
     --------
