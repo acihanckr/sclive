@@ -91,6 +91,10 @@ def dimred_plt_3d(adata: AnnData,
         comps = [0,1,2]
     if dimred_id_suffix is None:
         dimred_id_suffix = ""
+
+    if title_size is not None and title is None:
+        title = meta_id + " Dimension Reduction Plot"
+    
     
     #extract meta data from Annotated Data deciding if it is meta data or gene expression
     if is_gene_exp or meta_id not in adata.obs.columns.to_list():
