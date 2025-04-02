@@ -4,11 +4,8 @@ import numpy as np
 from scipy.ndimage import zoom
 import plotly.graph_objects as go
 from anndata import AnnData
-from distinctipy import get_colors, get_hex
-import warnings
 from ._layout_funcs import set_2d_layout
 from sclive import dataio
-from anndata import read_h5ad
 
 
 def dimred_coexprs_2d(adata: AnnData,
