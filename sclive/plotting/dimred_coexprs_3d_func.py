@@ -1,35 +1,34 @@
 from typing import Optional, List
 import polars as pl
+import numpy as np
+from scipy.ndimage import zoom
 import plotly.graph_objects as go
 from anndata import AnnData
-from distinctipy import get_colors, get_hex
-import warnings
-from ._layout_funcs import set_2d_layout
+from ._layout_funcs import set_3d_layout
 from sclive import dataio
 
-def dimred_plt_2d(adata: AnnData,
+def dimred_coexprs_3d(adata: AnnData,
                 dimred_id: str,
-                meta_id: str,
+                gene1: str,
+                gene2: str,
+                expr_color1:Optional[List[int]]=None, 
+                expr_color2:Optional[List[int]]=None,
+                base_color:Optional[List[int]]=None,
+                cont_color: Optional[str] = "magma",
                 comps: Optional[List[int]] = None,
                 selected_barcodes:Optional[List[str]] = None,
                 layer:Optional[str] = None,
                 use_raw: Optional[bool] = False,
-                cat: Optional[bool] = None,
                 dimred_id_suffix:Optional[str] = None,
-                is_gene_exp: Optional[bool|None]=None,
-                cont_color: Optional[str] = None, 
-                meta_order: Optional[List[str]] = None, 
-                meta_colors: Optional[List[str]] = None, 
                 title: Optional[str] = None,
                 dimred_labels: Optional[str] = None,
                 pt_size: Optional[int] = 12, 
                 ticks_font_size: Optional[int] = None,  
                 axis_font_size: Optional[int] = None, 
-                labels_size: Optional[int] = None, 
                 legend_size: Optional[int] = None,
                 title_size: Optional[int] = None,
-                width: Optional[int|float|str] = "auto", 
-                height: Optional[int|float|str] = "auto")-> go.Figure:
+                aspectmode: Optional[str] = "cube", 
+                plt_size: Optional[int|float|str] = 480)-> go.Figure:
     """
     Creates a 2D scatter plot of the dimension reduction based on the given meta data.
 
@@ -90,75 +89,54 @@ def dimred_plt_2d(adata: AnnData,
     if dimred_id_suffix is None:
         dimred_id_suffix = ""
     if comps is None:
-        comps = [0,1]
-    if title_size is not None and title is None:
-        title = meta_id + " Dimension Reduction Plot"
+        comps = [0,1, 2]
+
+    if expr_color1 is None:
+        expr_color1 = (255,0,0)
+    if expr_color2 is None:
+        expr_color2 = (0,0,255)
+    if base_color is None:
+        base_color = (217,217,217)
+    combined_color = tuple(c1+c2 for c1, c2 in zip(expr_color1, expr_color2))
+
     #extract meta data from Annotated Data deciding if it is meta data or gene expression
-    if is_gene_exp or meta_id not in adata.obs.columns.to_list():
-        dimred_data = dataio.get_dimred_with_exprs(adata, dimred_id, [meta_id], comps, use_raw, dimred_id_suffix, layer)
-    else:
-        dimred_data = dataio.get_dimred_with_metas(adata, dimred_id, [meta_id], comps, cat, dimred_id_suffix)
-    cat = dimred_data[meta_id].dtype == pl.Categorical
+    plotting_data = dataio.get_dimred_with_exprs(adata, dimred_id, [gene1, gene2], comps, use_raw, dimred_id_suffix, layer)
+    gene1_min = plotting_data[gene1].min()
+    gene1_max = plotting_data[gene1].max()
+    gene2_min = plotting_data[gene2].min()
+    gene2_max = plotting_data[gene2].max()
+
+    gene1_range = pl.DataFrame(np.linspace(gene1_min, gene1_max, 100), schema=[gene1]).with_row_index()
+    gene2_range = pl.DataFrame(np.linspace(gene2_min, gene2_max, 100), [gene2]).with_row_index()
+
+    plotting_data = plotting_data.sort(gene1).join_asof(gene1_range.sort(gene1), on = gene1).sort(gene2).join_asof(gene2_range.sort(gene2), on = gene2)
+    color_grid = zoom(np.array([[expr_color1, combined_color],[base_color,expr_color2]], dtype=np.uint8),
+                      (50,50,1), order=1)
+    
+    plotting_data = plotting_data.with_columns(pl.struct(["index", "index_right"]).map_elements(lambda x:f'rgb{int(color_grid[x["index"], x["index_right"], 0]), int(color_grid[x["index"], x["index_right"], 1]),int(color_grid[x["index"], x["index_right"], 2])}' , returns_scalar=True).alias("col"))
     
     if selected_barcodes and len(selected_barcodes) > 0:
-            plotting_data_removed = dimred_data.filter(~pl.col("barcode").is_in(selected_barcodes))
-            plotting_data = dimred_data.filter(pl.col("barcode").is_in(selected_barcodes))
-            fig = go.Figure(go.Scatter(x = plotting_data_removed["X"],
+            plotting_data_removed = plotting_data.filter(~pl.col("barcode").is_in(selected_barcodes))
+            plotting_data = plotting_data.filter(pl.col("barcode").is_in(selected_barcodes))
+            fig = go.Figure(go.Scatter3d(x = plotting_data_removed["X"],
                         y = plotting_data_removed["Y"], 
                         mode="markers+text",
                         marker={"color":"#808080",
                                 "opacity": 0.5,
                                 "size":pt_size}))
     else:
-        plotting_data = dimred_data
         fig = go.Figure()
-
-    #set meta order list
-    if cat and meta_order is None:
-        meta_order = plotting_data[meta_id].cat.get_categories().to_list()
-    elif meta_order is not None:
-        meta_order = list(set(meta_order))
-        if any([mt not in plotting_data[meta_id].cat.get_categories() for mt in meta_order]):
-            raise(ValueError("Given meta cannot be found in the data!"))
-   
-    if cat and len(meta_order) > 100:
-        warnings.warn("Number of categories in the meta data is too high. This may cause perfomance issues! Make sure meta id is not continuous")
+    fig.add_trace(go.Scatter3d(
+            x = plotting_data["X"],
+            y = plotting_data["Y"],
+            z = plotting_data["Z"],
+            mode="markers+text",
+            showlegend=False,
+            hovertemplate=f"<b>{gene1}: </b>%{{customdata[0]:.2f}}<br><b>{gene2}: </b>%{{customdata[1]:.2f}}<extra></extra>",
+            marker={"size":pt_size,
+                    "color":plotting_data["col"],
+                    "colorscale":cont_color}))
     
-    #set meta colors list
-    if cat and meta_colors is None:
-        meta_colors = [get_hex(c) for c in get_colors(len(meta_order))]
-    elif meta_colors is not None:
-        if len(meta_colors) != len(meta_order):
-            raise(ValueError("Given meta colors does not match the categories in the data!"))
-
-    if cat:
-        colors = {k:v for k,v in zip(meta_order, meta_colors)}
-        for i, meta_category in enumerate(meta_order):
-            fig.add_trace(go.Scatter(x = plotting_data.filter(pl.col(meta_id) == meta_category)["X"],
-                y = plotting_data.filter(pl.col(meta_id) == meta_category)["Y"], 
-                mode="markers+text",
-                hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Category: </b>"+str(meta_category)+"<extra></extra>",
-                marker={"size":pt_size,
-                        "color":colors[str(meta_category)]}, name=str(meta_category)))
-    else:
-        fig.add_trace(go.Scatter(
-                x = plotting_data["X"],
-                y = plotting_data["Y"],
-                mode="markers+text",
-                showlegend=False,
-                hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Value: </b>%{marker.color:.2f}<extra></extra>",
-                marker={"size":pt_size,
-                        "color":plotting_data[meta_id],
-                        "cmin":plotting_data[meta_id].min(),
-                        "cmax":plotting_data[meta_id].max(),
-                        "colorscale":'magma' if cont_color is None else cont_color,
-                        "showscale":True}))
-        
-    if labels_size and cat:
-        for name, data in plotting_data.group_by(meta_id):
-            fig.add_annotation(x=data["X"].mean(), y=data["Y"].mean(), text=name[0], showarrow=False,
-                                font=dict(size=labels_size))
-
     # set axis text size and legend text size
     if dimred_labels is None:
         dimred_labels = [f'{dimred_id_suffix + dimred_id}_{i}' for i in comps]
@@ -167,16 +145,13 @@ def dimred_plt_2d(adata: AnnData,
     elif not isinstance(dimred_labels, list) or any(not isinstance(item, str) for item in dimred_labels):
         raise ValueError("dimred_labels must be a string or a list of strings")
 
-    if height == "true_asp_ratio":
-        height = width*(plotting_data["Y"].max() - plotting_data["Y"].min())/ (plotting_data["X"].max() - plotting_data["X"].min())
-    
-    if title_size is not None and title is None:
-        title = f"{meta_id} Plot"
-    fig = set_2d_layout(fig, ticks_font_size=ticks_font_size, 
+    fig = set_3d_layout(fig, 
+                        ticks_font_size=ticks_font_size, 
                         dimred_labels=dimred_labels, 
                         axis_font_size=axis_font_size, 
                         legend_size=legend_size, 
                         title_size=title_size, 
                         title=title, 
-                        width=width, height=height)
+                        plt_size=plt_size,
+                        aspectmode=aspectmode)
     return fig

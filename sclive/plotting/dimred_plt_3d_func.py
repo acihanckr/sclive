@@ -170,7 +170,10 @@ def dimred_plt_3d(adata: AnnData,
         dimred_labels = [f'{dimred_labels}_{i}' for i in comps]
     elif not isinstance(dimred_labels, list) or any(not isinstance(item, str) for item in dimred_labels):
         raise ValueError("dimred_labels must be a string or a list of strings")
-
+    
+    if title_size is not None and title is None:
+        title = f"{meta_id} Plot"
+    
     fig = set_3d_layout(fig, 
                         ticks_font_size=ticks_font_size, 
                         dimred_labels=dimred_labels, 
