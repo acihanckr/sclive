@@ -126,6 +126,8 @@ def set_3d_layout(fig: Figure,
     plotly.Figure 
         Figure object with the layout set with the given parameters
     '''
+    if title_size is None:
+        title_size = 0
     fig.update_layout(
         margin=dict(
             l=5,
