@@ -29,7 +29,6 @@ def dimred_coexprs_2d(adata: AnnData,
                 pt_size: Optional[int] = 12, 
                 ticks_font_size: Optional[int] = None,  
                 axis_font_size: Optional[int] = None, 
-                legend_size: Optional[int] = None,
                 title_size: Optional[int] = None,
                 width: Optional[int|float|str] = "auto", 
                 height: Optional[int|float|str] = "auto")-> go.Figure:
@@ -134,13 +133,13 @@ def dimred_coexprs_2d(adata: AnnData,
     fig.add_trace(go.Scatter(
             x = plotting_data["X"],
             y = plotting_data["Y"],
+            customdata = plotting_data.select(gene1, gene2),
             mode="markers+text",
             showlegend=False,
-            hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Value: </b>%{marker.color:.2f}<extra></extra>",
+            hovertemplate=f"<b>{gene1}: </b>%{{customdata[0]:.2f}}<br><b>{gene2}: </b>%{{customdata[1]:.2f}}<extra></extra>",
             marker={"size":pt_size,
                     "color":plotting_data["col"],
-                    "colorscale": cont_color,
-                    "showscale":True}))
+                    "colorscale": cont_color}))
     
     
     # set axis text size and legend text size
@@ -154,10 +153,13 @@ def dimred_coexprs_2d(adata: AnnData,
     if height == "true_asp_ratio":
         height = width*(plotting_data["Y"].max() - plotting_data["Y"].min())/ (plotting_data["X"].max() - plotting_data["X"].min())
     
+    if title_size is not None and title is None:
+        title = f"{gene1} and {gene2} Coexpression Plot"
+    
     fig = set_2d_layout(fig, ticks_font_size=ticks_font_size, 
                         dimred_labels=dimred_labels, 
                         axis_font_size=axis_font_size, 
-                        legend_size=legend_size, 
+                        legend_size=None, 
                         title_size=title_size, 
                         title=title, 
                         width=width, height=height)

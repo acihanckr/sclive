@@ -4,8 +4,6 @@ import numpy as np
 from scipy.ndimage import zoom
 import plotly.graph_objects as go
 from anndata import AnnData
-from distinctipy import get_colors, get_hex
-import warnings
 from ._layout_funcs import set_3d_layout
 from sclive import dataio
 
@@ -91,7 +89,7 @@ def dimred_coexprs_3d(adata: AnnData,
     if dimred_id_suffix is None:
         dimred_id_suffix = ""
     if comps is None:
-        comps = [0,1]
+        comps = [0,1, 2]
 
     if expr_color1 is None:
         expr_color1 = (255,0,0)
@@ -134,11 +132,10 @@ def dimred_coexprs_3d(adata: AnnData,
             z = plotting_data["Z"],
             mode="markers+text",
             showlegend=False,
-            hovertemplate="<b>X: </b>%{x:.2f}<br><b>Y: </b>%{y:.2f}<br><b>Value: </b>%{marker.color:.2f}<extra></extra>",
+            hovertemplate=f"<b>{gene1}: </b>%{{customdata[0]:.2f}}<br><b>{gene2}: </b>%{{customdata[1]:.2f}}<extra></extra>",
             marker={"size":pt_size,
                     "color":plotting_data["col"],
-                    "colorscale":cont_color,
-                    "showscale":True}))
+                    "colorscale":cont_color}))
     
     # set axis text size and legend text size
     if dimred_labels is None:
@@ -154,5 +151,7 @@ def dimred_coexprs_3d(adata: AnnData,
                         axis_font_size=axis_font_size, 
                         legend_size=legend_size, 
                         title_size=title_size, 
-                        title=title, plt_size=plt_size,aspectmode=aspectmode)
+                        title=title, 
+                        plt_size=plt_size,
+                        aspectmode=aspectmode)
     return fig

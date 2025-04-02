@@ -170,6 +170,8 @@ def dimred_plt_2d(adata: AnnData,
     if height == "true_asp_ratio":
         height = width*(plotting_data["Y"].max() - plotting_data["Y"].min())/ (plotting_data["X"].max() - plotting_data["X"].min())
     
+    if title_size is not None and title is None:
+        title = f"{meta_id} Plot"
     fig = set_2d_layout(fig, ticks_font_size=ticks_font_size, 
                         dimred_labels=dimred_labels, 
                         axis_font_size=axis_font_size, 
