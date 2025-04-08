@@ -65,7 +65,6 @@ def set_2d_layout(fig: Figure,
             showlegend=False,
         )
         fig.update_layout(coloraxis_showscale=False)
-        fig.update_traces(marker_showscale=False)
     else:
         fig.update_layout(
             showlegend=True,
@@ -172,7 +171,6 @@ def set_3d_layout(fig: Figure,
         showlegend=False,
         )
         fig.update_layout(coloraxis_showscale=False)
-        fig.update_traces(marker_showscale=False)
 
     if title_size:
         fig.update_layout(

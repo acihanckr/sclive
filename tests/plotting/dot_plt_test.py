@@ -22,3 +22,4 @@ def test_dot_plt(scanpy_std_pipeline):
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], width = 400, height= 80).write_html("fig.html")
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], title_size=12).write_html("fig.html")
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], title_size=12, title="Dotplot").write_html("fig.html")
+test_dot_plt(None)

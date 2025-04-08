@@ -9,6 +9,7 @@ def test_dimred_plt_2d(scanpy_std_pipeline):
 
     #standard use
     dimred_plt_2d(adata, "X_umap", "leiden").write_html("fig.html")
+    dimred_plt_2d(adata, "X_umap", "CST3").write_html("fig.html")
     dimred_plt_2d(adata, "X_pca", "leiden").write_html("fig.html")
     dimred_plt_2d(adata, "umap", "leiden", dimred_id_suffix="X_").write_html("fig.html")
     
@@ -44,6 +45,7 @@ def test_dimred_plt_2d(scanpy_std_pipeline):
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5).write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12).write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12).write_html("fig.html")
+    dimred_plt_2d(adata, "X_umap", "CST3", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, is_gene_exp = True).write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12).write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12, title="Test").write_html("fig.html")
     dimred_plt_2d(adata, "X_umap", "leiden", width=800,height=800, pt_size=5, legend_size=12, labels_size=12, title_size=12, title="Test", axis_font_size=12).write_html("fig.html")
