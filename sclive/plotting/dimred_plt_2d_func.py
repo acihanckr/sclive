@@ -17,7 +17,7 @@ def dimred_plt_2d(adata: AnnData,
                 cat: Optional[bool] = None,
                 dimred_id_suffix:Optional[str] = None,
                 is_gene_exp: Optional[bool|None]=None,
-                cont_color: Optional[str] = None, 
+                cont_color: Optional[str] =  "magma", 
                 meta_order: Optional[List[str]] = None, 
                 meta_colors: Optional[List[str]] = None, 
                 title: Optional[str] = None,
@@ -151,8 +151,8 @@ def dimred_plt_2d(adata: AnnData,
                         "color":plotting_data[meta_id],
                         "cmin":plotting_data[meta_id].min(),
                         "cmax":plotting_data[meta_id].max(),
-                        "colorscale":'magma' if cont_color is None else cont_color,
-                        "showscale":True}))
+                        "colorscale":cont_color,
+                        "showscale":bool(legend_size)}))
         
     if labels_size and cat:
         for name, data in plotting_data.group_by(meta_id):

@@ -64,9 +64,10 @@ def set_2d_layout(fig: Figure,
         fig.update_layout(
             showlegend=False,
         )
+        fig.update_layout(coloraxis_showscale=False)
     else:
         fig.update_layout(
-        showlegend=True,
+            showlegend=True,
         legend = {"font":{"size":legend_size}}
         )
 
@@ -169,6 +170,8 @@ def set_3d_layout(fig: Figure,
         fig.update_layout(
         showlegend=False,
         )
+        fig.update_layout(coloraxis_showscale=False)
+
     if title_size:
         fig.update_layout(
             title = {"text":title,
