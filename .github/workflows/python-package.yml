@@ -24,10 +24,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: Install poetry
-        run: pipx install poetry
-
+        run: |
+          pipx install poetry
+      
       - name: Install dependencies
-        run: poetry install
+        run: |
+          poetry env use python${{ matrix.python-version }}
+          poetry env info
+          poetry install
 
       - name: Run linter
         run: |
