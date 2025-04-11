@@ -26,18 +26,10 @@ jobs:
       - name: Install poetry
         run: |
           pipx install poetry
-
-      - name: Install pyenv
-        run: |
-          curl -fsSL https://pyenv.run | bash
-          export PYENV_ROOT="$HOME/.pyenv
-          [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init - bash)"
-          pyenv install ${{ matrix.python-version }}
-          pyenv local ${{ matrix.python-version }}
       
       - name: Install dependencies
         run: |
+          poetry use python${{ matrix.python-version }}
           poetry env info
           poetry install
 
