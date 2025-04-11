@@ -16,20 +16,21 @@ def dimred_plt_2d(adata: AnnData,
                 use_raw: Optional[bool] = False,
                 cat: Optional[bool] = None,
                 dimred_id_suffix:Optional[str] = None,
-                is_gene_exp: Optional[bool|None]=None,
+                is_gene_exp: Optional[bool]=None,
                 cont_color: Optional[str] =  "magma", 
                 meta_order: Optional[List[str]] = None, 
                 meta_colors: Optional[List[str]] = None, 
                 title: Optional[str] = None,
-                dimred_labels: Optional[str] = None,
+                dimred_labels: Optional[List[str]|str] = None,
                 pt_size: Optional[int] = 12, 
                 ticks_font_size: Optional[int] = None,  
                 axis_font_size: Optional[int] = None, 
                 labels_size: Optional[int] = None, 
-                legend_size: Optional[int] = None,
+                legend_font_size: Optional[int] = None,
+                legend_title: Optional[str] = None,
                 title_size: Optional[int] = None,
-                width: Optional[int|float|str] = "auto", 
-                height: Optional[int|float|str] = "auto")-> go.Figure:
+                width: Optional[int|str] = "auto", 
+                height: Optional[int|str] = "auto")-> go.Figure:
     """
     Creates a 2D scatter plot of the dimension reduction based on the given meta data.
 
@@ -71,19 +72,18 @@ def dimred_plt_2d(adata: AnnData,
         font size of the axis labels. If not provided or None, axis labels will be omitted 
     :param labels_size: 
         font size of labels for categorical meta. If set to False, labels won't be drawn
-    :param legend_size: 
+    :param legend_font_size: 
         font size for legend. If set to False, legend will be hidden.
+    :param legend_title: 
+        legend title
     :param title_size: 
         font size for title. If set to False, legend will be hidden.
     :param width: 
         width of the plot. Can be auto or any value Plotly graph objects accepts
     :param height: 
         height of the plot. Can be auto or 'true_asp_ratio' or any value Plotly graph objects accepts. If set to true_asp_ratio, width must be explicit and height will be set using the range of x/y values
-    
-    Returns:
-    --------
-    plotly.Figure
-        Figure containing the 2D scatter plot of the dimension reduction   
+    :returns:
+        plotly figure containing the 2D scatter plot of the dimension reduction   
     """
 
     #extract dimension reduction data from Annotated Data
@@ -108,7 +108,8 @@ def dimred_plt_2d(adata: AnnData,
                         mode="markers+text",
                         marker={"color":"#808080",
                                 "opacity": 0.5,
-                                "size":pt_size}))
+                                "size":pt_size},
+                        hoverinfo="skip"))
     else:
         plotting_data = dimred_data
         fig = go.Figure()
@@ -152,7 +153,14 @@ def dimred_plt_2d(adata: AnnData,
                         "cmin":plotting_data[meta_id].min(),
                         "cmax":plotting_data[meta_id].max(),
                         "colorscale":cont_color,
-                        "showscale":bool(legend_size)}))
+                        "showscale":bool(legend_font_size),
+                        "colorbar": {
+                            "title": {"font": {"size":legend_font_size},
+                                      "text":legend_title},
+                            "tickfont":{
+                                "size":legend_font_size
+                            }
+                        }}))
         
     if labels_size and cat:
         for name, data in plotting_data.group_by(meta_id):
@@ -173,10 +181,12 @@ def dimred_plt_2d(adata: AnnData,
     if title_size is not None and title is None:
         title = f"{meta_id} Plot"
     fig = set_2d_layout(fig, ticks_font_size=ticks_font_size, 
-                        dimred_labels=dimred_labels, 
+                        axis_labels=dimred_labels, 
                         axis_font_size=axis_font_size, 
-                        legend_size=legend_size, 
+                        legend_font_size=legend_font_size, 
+                        legend_title=legend_title, 
                         title_size=title_size, 
                         title=title, 
-                        width=width, height=height)
+                        width=width, 
+                        height=height)
     return fig

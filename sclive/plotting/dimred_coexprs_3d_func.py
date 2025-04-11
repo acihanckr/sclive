@@ -20,24 +20,33 @@ def dimred_coexprs_3d(adata: AnnData,
                 layer:Optional[str] = None,
                 use_raw: Optional[bool] = False,
                 dimred_id_suffix:Optional[str] = None,
+                title_size: Optional[int] = None,
                 title: Optional[str] = None,
-                dimred_labels: Optional[str] = None,
+                dimred_labels: Optional[List[str]|str] = None,
                 pt_size: Optional[int] = 12, 
                 ticks_font_size: Optional[int] = None,  
                 axis_font_size: Optional[int] = None, 
-                legend_size: Optional[int] = None,
-                title_size: Optional[int] = None,
                 aspectmode: Optional[str] = "cube", 
-                plt_size: Optional[int|float|str] = 480)-> go.Figure:
+                plt_size: Optional[int|str] = 480)-> go.Figure:
     """
-    Creates a 2D scatter plot of the dimension reduction based on the given meta data.
+    Creates a 3D scatter plot of the dimension reduction based on the given meta data.
 
     :param adata: 
         annotated data object the dimention reduction plot to be based on 
     :param dimred_id: 
         dimension reduction to use for scatter plot
-    :param meta_id: 
-        which obs meta feature or the gene expression to use for colors 
+    :param gene1:
+        first gene to use for co-expression
+    :param gene2:
+        second gene to use for co-expression
+    :param expr_color1:
+        color representing the first gene expression
+    :param expr_color2:
+        color representing the second gene expression
+    :param base_color:
+        color representing the minimum of both gene expressions combined
+    :param cont_color:
+        color gradient for dots. Can be anything Plotly graph object accepts
     :param comps: 
         which of the components of the dimension reduction to use. Default is first two
     :param selected_barcodes: 
@@ -46,18 +55,10 @@ def dimred_coexprs_3d(adata: AnnData,
         which layer to extract gene expression data from. It is ignored for meta_id from obs
     :param use_raw: 
         either to use raw gene expression or scaled. See scanpy for more details
-    :param cat: 
-        if meta_id is category or continuous. If not provided or None, this will be inferred using polars column types
     :param dimred_id_suffix: 
         if a suffix is added to dimred_id in the annotated data. For example "X_" if scanpy is used for preprocess
-    :param is_gene_exp: 
-        is the given meta id a gene expression
-    :param cont_color: 
-        color gradient scale for continuous cell meta or gene expression. Can be anything Plotly graph object accepts
-    :param meta_order: 
-        order of cell meta feature categories. This determines the order traces are added to figure and may cause some points covering other.
-    :param meta_colors: 
-        colors to use for categorical obs meta. If not provided it will be set randomly using distinctpy library
+    :param title_size: 
+        font size for title. If set to False, legend will be hidden.
     :param title: 
         title for the plot
     :param dimred_labels: 
@@ -68,21 +69,12 @@ def dimred_coexprs_3d(adata: AnnData,
         size of tick labels on x and y axis
     :param axis_font_size: 
         font size of the axis labels. If not provided or None, axis labels will be omitted 
-    :param labels_size: 
-        font size of labels for categorical meta. If set to False, labels won't be drawn
-    :param legend_size: 
-        font size for legend. If set to False, legend will be hidden.
-    :param title_size: 
-        font size for title. If set to False, legend will be hidden.
-    :param width: 
-        width of the plot. Can be auto or any value Plotly graph objects accepts
-    :param height: 
-        height of the plot. Can be auto or 'true_asp_ratio' or any value Plotly graph objects accepts. If set to true_asp_ratio, width must be explicit and height will be set using the range of x/y values
-    
-    Returns:
-    --------
-    plotly.Figure
-        Figure containing the 2D scatter plot of the dimension reduction   
+    :param aspectmode:
+        aspect mode for the plot. Options: 'cube', 'auto', 'data'
+    :param plt_size:
+        size of the plot. Can be auto or any value Plotly graph objects accepts
+    :returns:
+        numpy array representing the color grid and plotly figure object with the scatter plot
     """
 
     #extract dimension reduction data from Annotated Data
@@ -90,7 +82,12 @@ def dimred_coexprs_3d(adata: AnnData,
         dimred_id_suffix = ""
     if comps is None:
         comps = [0,1, 2]
-
+    
+    if (bool(expr_color1) ^ bool(expr_color2)):
+        raise ValueError("None or both expr_color1 and expr_color2 must be provided")
+    if (expr_color1 is not None) and (expr_color2 is not None) and any([a+b for a,b in zip(expr_color1, expr_color2)]) > 255:
+        raise ValueError("The sum of the color RGB values must be less than or equal to 255")
+    
     if expr_color1 is None:
         expr_color1 = (255,0,0)
     if expr_color2 is None:
@@ -123,7 +120,8 @@ def dimred_coexprs_3d(adata: AnnData,
                         mode="markers+text",
                         marker={"color":"#808080",
                                 "opacity": 0.5,
-                                "size":pt_size}))
+                                "size":pt_size},
+                        hoverinfo="skip"))
     else:
         fig = go.Figure()
     fig.add_trace(go.Scatter3d(
@@ -132,6 +130,7 @@ def dimred_coexprs_3d(adata: AnnData,
             z = plotting_data["Z"],
             mode="markers+text",
             showlegend=False,
+            customdata = plotting_data.select(gene1, gene2),
             hovertemplate=f"<b>{gene1}: </b>%{{customdata[0]:.2f}}<br><b>{gene2}: </b>%{{customdata[1]:.2f}}<extra></extra>",
             marker={"size":pt_size,
                     "color":plotting_data["col"],
@@ -147,11 +146,11 @@ def dimred_coexprs_3d(adata: AnnData,
 
     fig = set_3d_layout(fig, 
                         ticks_font_size=ticks_font_size, 
-                        dimred_labels=dimred_labels, 
+                        axis_labels=dimred_labels, 
                         axis_font_size=axis_font_size, 
-                        legend_size=legend_size, 
+                        legend_font_size=None, 
                         title_size=title_size, 
                         title=title, 
                         plt_size=plt_size,
                         aspectmode=aspectmode)
-    return fig
+    return color_grid, fig
