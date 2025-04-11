@@ -30,8 +30,11 @@ jobs:
       - name: Install pyenv
         run: |
           curl -fsSL https://pyenv.run | bash
-          $HOME/.pyenv/pyenv install ${{ matrix.python-version }}
-          $HOME/.pyenv/pyenv local ${{ matrix.python-version }}
+          export PYENV_ROOT="$HOME/.pyenv
+          [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init - bash)"
+          pyenv install ${{ matrix.python-version }}
+          pyenv local ${{ matrix.python-version }}
       
       - name: Install dependencies
         run: |
