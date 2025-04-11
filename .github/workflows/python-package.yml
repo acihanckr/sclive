@@ -26,12 +26,16 @@ jobs:
       - name: Install poetry
         run: |
           pipx install poetry
-          
+
+      - name: Install pyenv
+        run: |
+          curl -fsSL https://pyenv.run | bash
+          $HOME/.pyenv/pyenv install ${{ matrix.python-version }}
+          $HOME/.pyenv/pyenv local ${{ matrix.python-version }}
+      
       - name: Install dependencies
         run: |
-          pyenv install ${{ matrix.python-version }}
-          pyenv local ${{ matrix.python-version }}
-          poetry run python --version
+          poetry env info
           poetry install
 
       - name: Run linter
