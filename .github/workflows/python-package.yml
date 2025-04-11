@@ -17,22 +17,22 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-        
-      - name: Install poetry
-        run: |
-          pipx install poetry
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+      
+      - name: Install poetry
+        run: |
+          pipx install poetry
           
-      - name: Poetry Env
-        run: poetry run python --version
-
       - name: Install dependencies
-        run: poetry install
+        run: |
+          pyenv install ${{ matrix.python-version }}
+          pyenv local ${{ matrix.python-version }}
+          poetry run python --version
+          poetry install
 
       - name: Run linter
         run: |
