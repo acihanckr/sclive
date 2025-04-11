@@ -26,7 +26,7 @@ jobs:
       - name: Install poetry
         run: |
           pipx install poetry
-          peotry env info
+          poetry env info
 
       - name: Install dependencies
         run: poetry install
