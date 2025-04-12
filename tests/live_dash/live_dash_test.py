@@ -1,6 +1,3 @@
-import json
-import polars as pl
-import polars.selectors as cs
 from anndata import read_h5ad
 from sclive.live_dash import create_dash_app
 from sclive.live_dash import ScLiveDash
