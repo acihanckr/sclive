@@ -5,11 +5,7 @@ on:
   # Runs on pushes targeting the default branch
   push:
     tags:
-<<<<<<< Updated upstream
-      - "docs*"
-=======
-      - docs*
->>>>>>> Stashed changes
+      - "docs**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
