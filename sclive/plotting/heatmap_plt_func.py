@@ -1,7 +1,6 @@
 from typing import Optional, List
 from anndata import AnnData
 import polars as pl
-import dash_bio
 from plotly import graph_objects as go
 from sclive.dataio.get_metas_func import get_metas
 from sclive.dataio.get_gene_exprs_func import get_gene_exprs
@@ -12,6 +11,8 @@ def heatmap_plt(adata: AnnData,
                 gene_list:List[str],
                 use_raw:Optional[bool]=False,
                 layer:Optional[str]=None,
+                meta_order:Optional[List[str]]=None,
+                gene_order:Optional[List[str]]=None,
                 ticks_font_size:Optional[int]=12,
                 width:Optional[int|str]="auto", 
                 height:Optional[int|str]="auto", 
@@ -19,10 +20,10 @@ def heatmap_plt(adata: AnnData,
                 legend_title: Optional[str] = None,
                 title_size:Optional[int]=None,
                 title:Optional[str]=None,
-                cluster_rows:Optional[bool] = False, 
-                cluster_columns:Optional[bool] = False, 
                 scale_features:Optional[bool] = False, 
-                cont_color: Optional[str] = "reds")-> go.Figure:
+                cont_color: Optional[str] = "reds",
+                axis_font_size: Optional[int] = None,
+                axis_labels: Optional[List[str]] = None)-> go.Figure:
   '''
   Draws co-expression scatter plot for given genes using given anndata object. This function is a wrapper for dash-bio's Clustergram function and it provide further customization options.
   
@@ -36,6 +37,10 @@ def heatmap_plt(adata: AnnData,
     either to use raw gene counts
   :param layer: 
     which layer to extract the gene expressions
+  :param meta_order:
+    order of the meta categories. If None, the order will be random
+  :param gene_order:
+    order of the genes. If None, the order will be random
   :param ticks_font_size: 
     size of tick labels on x and y axis 
   :param width: 
@@ -50,59 +55,51 @@ def heatmap_plt(adata: AnnData,
     font size for title
   :param title: 
     title for the plot
-  :param cluster_rows: 
-    Either to cluster rows
-  :param cluster_columns: 
-    Either to cluster columns
   :param scale_features: 
     either to scale gene expressions
   :param cont_color: 
     color gradient for dots. Can be anything Plotly graph object accepts
+  :param axis_font_size:
+    font size for axis labels. If None axis labels will be omitted
+  :param axis_labels:
+    the label of the x and y axes
   :returns:
     plotly graph figure object containing heatmap of gene list over given meta id
   ''' 
   
+  if legend_font_size is not None and legend_title is None:
+    legend_title = "Mean Expression"
+  
   plotting_data = get_metas(adata, [meta_id], cat=True).join(get_gene_exprs(adata, gene_list,use_raw=use_raw, layer=layer), on="barcode")
   dendo_mtx = plotting_data.group_by(meta_id).agg(pl.exclude(meta_id, "barcode", "gene_exprs").mean())
+  if scale_features:
+    dendo_mtx = dendo_mtx.with_columns(((pl.exclude(meta_id).log1p() - pl.exclude(meta_id).log1p().min()) / (pl.exclude(meta_id).log1p().max() - pl.exclude(meta_id).log1p().min())).round(4))
   
-  
-  match (cluster_rows, cluster_columns):
-    case (True, True):
-      clustering = "all"
-    case (True, False):
-      clustering = "row"
-    case (False, True):
-      clustering = "col"
-    case (False, False):
-      clustering = None  
-  
-  dendo_mtx = plotting_data.group_by(meta_id).agg(pl.exclude(meta_id, "barcode", "gene_exprs").mean())
-  fig = dash_bio.Clustergram(
-    data=dendo_mtx.drop(meta_id).to_numpy().transpose(),
-    center_values=False,
-    column_labels=dendo_mtx[meta_id].to_list(),
-    row_labels=[c for c in dendo_mtx.columns if c in gene_list],
-    color_map=cont_color,
-    cluster=clustering,
-    standardize="column" if scale_features else 'none',
-    tick_font=dict(size=ticks_font_size),
-    width=width if width != "auto" else None,
-    height=height if height != "auto" else None)
-  if legend_font_size is None:
-    fig.data[-1].update(
-      showscale=False)
-  else:
-    fig.data[-1].showscale = True
-    fig.data[-1].colorbar.tickfont.size = legend_font_size
-    fig.data[-1].colorbar.title.font.size = legend_font_size
-    fig.data[-1].colorbar.title.text = legend_title
+  if meta_order is not None:
+    dendo_mtx = dendo_mtx.with_columns(pl.col(meta_id).cast(pl.String)).join(pl.DataFrame({meta_id:meta_order, "ind":range(len(meta_order))}), on=meta_id).sort("ind").drop("ind")
+  if gene_order is not None:
+     dendo_mtx = dendo_mtx.select([meta_id] + gene_order)
+  fig = go.Figure(go.Heatmap(
+    z = dendo_mtx.drop(meta_id).to_numpy().transpose(),
+    x = dendo_mtx[meta_id].to_list(),
+    y = [c for c in dendo_mtx.columns if c in gene_list],
+    colorbar = dict(
+      tickfont = dict(size=legend_font_size),
+      title = dict(font = dict(size=legend_font_size),
+                   text = legend_title)
+    ),
+    showscale = legend_font_size is not None,
+    colorscale=cont_color))
   
   if title_size is not None and title is None:
         title = f"{meta_id} Gene Expressions Heatmap"
-       
-  
+  if axis_font_size is not None and axis_labels is None:
+        axis_labels = [meta_id, "Genes"]
   fig = set_2d_layout(fig,
+                      ticks_font_size = ticks_font_size,  
                       title_size = title_size,
+                      axis_labels = axis_labels,
+                      axis_font_size = axis_font_size,
                       title = title,
                       width = width, 
                       height = height)
