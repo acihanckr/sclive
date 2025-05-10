@@ -19,6 +19,7 @@ def dimred_coexprs_3d(adata: AnnData,
                 selected_barcodes:Optional[List[str]] = None,
                 layer:Optional[str] = None,
                 use_raw: Optional[bool] = False,
+                granularity: Optional[int] = 50,
                 dimred_id_suffix:Optional[str] = None,
                 title_size: Optional[int] = None,
                 title: Optional[str] = None,
@@ -55,6 +56,8 @@ def dimred_coexprs_3d(adata: AnnData,
         which layer to extract gene expression data from. It is ignored for meta_id from obs
     :param use_raw: 
         either to use raw gene expression or scaled. See scanpy for more details
+    :param granularity:
+        the number of colors to use for the color gradient. Default is 50
     :param dimred_id_suffix: 
         if a suffix is added to dimred_id in the annotated data. For example "X_" if scanpy is used for preprocess
     :param title_size: 
@@ -103,12 +106,12 @@ def dimred_coexprs_3d(adata: AnnData,
     gene2_min = plotting_data[gene2].min()
     gene2_max = plotting_data[gene2].max()
 
-    gene1_range = pl.DataFrame(np.linspace(gene1_min, gene1_max, 100), schema=[gene1]).with_row_index()
-    gene2_range = pl.DataFrame(np.linspace(gene2_min, gene2_max, 100), [gene2]).with_row_index()
+    gene1_range = pl.DataFrame(np.linspace(gene1_min, gene1_max, granularity*2), schema=[gene1]).with_row_index()
+    gene2_range = pl.DataFrame(np.linspace(gene2_min, gene2_max, granularity*2), [gene2]).with_row_index()
 
     plotting_data = plotting_data.sort(gene1).join_asof(gene1_range.sort(gene1), on = gene1).sort(gene2).join_asof(gene2_range.sort(gene2), on = gene2)
-    color_grid = zoom(np.array([[expr_color1, combined_color],[base_color,expr_color2]], dtype=np.uint8),
-                      (50,50,1), order=1)
+    color_grid = zoom(np.array([[base_color, expr_color2],[expr_color1,combined_color]], dtype=np.uint8),
+                      (granularity,granularity,1), order=1)
     
     plotting_data = plotting_data.with_columns(pl.struct(["index", "index_right"]).map_elements(lambda x:f'rgb{int(color_grid[x["index"], x["index_right"], 0]), int(color_grid[x["index"], x["index_right"], 1]),int(color_grid[x["index"], x["index_right"], 2])}' , returns_scalar=True).alias("col"))
     
@@ -153,4 +156,4 @@ def dimred_coexprs_3d(adata: AnnData,
                         title=title, 
                         plt_size=plt_size,
                         aspectmode=aspectmode)
-    return color_grid, fig
+    return np.rot90(color_grid), fig
