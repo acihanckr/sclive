@@ -1,7 +1,9 @@
 import re
+from collections import OrderedDict
 import polars as pl
 from shiny import ui, reactive, render
 from shinywidgets import render_widget
+import plotly.express as px
 from sclive.dataio.get_gene_exprs_func import get_gene_exprs
 from sclive.plotting import (dimred_plt_3d,
                             dimred_plt_2d,
@@ -9,7 +11,9 @@ from sclive.plotting import (dimred_plt_3d,
                             dot_plt,
                             prop_plt,
                             box_plt,
-                            violin_plt)
+                            violin_plt,
+                            dimred_coexprs_2d,
+                            dimred_coexprs_3d)
 
 def create_dash_server(sclive_dash):
   def server(input, output, session):
@@ -40,10 +44,7 @@ def create_dash_server(sclive_dash):
                 width = "auto"
             else:
                 width = input.plt_width()
-            if input.auto_scale_height():
-                height = "auto"
-            else:
-                height = input.plt_height()
+            height = input.plt_height()
         
         if input.show_txt():
             txt_size = input.font_size()
@@ -72,8 +73,95 @@ def create_dash_server(sclive_dash):
                 labels_size, 
                 legend_font_size, 
                 cont_color)
-  
+
+
+    @reactive.Calc
+    def plot_coexprs_plt():
+        if input.plot3_type() != "Gene Coexpression":
+           return None, None
+        else:
+          gene1 = input.gene_coex1()
+          gene2 = input.gene_coex2()
+          if gene1 == gene2 or gene1 not in sclive_dash.adata.var_names or gene2 not in sclive_dash.adata.var_names:
+            return None, None
+          selected_barcodes = subset_data_by_barcode()
+          cube, plt_size_3d, width, height, ticks_font_size, txt_size, labels_size, legend_font_size, cont_color = get_plot_params()
+          gran = input.coexpr_granularity()
+          dimred = get_dimred()
+          match input.coexp_colors():
+              case "Red(Gene1); Blue(Gene2)":
+                  color1 = [255, 0, 0]
+                  color2 = [0, 0, 255]
+              case "Orange(Gene1); Blue(Gene2)":
+                  color1 = [255, 140, 0]
+                  color2 = [0, 0, 255]
+              case "Red(Gene1); Green(Gene2)":
+                  color1 = [255, 0, 0]
+                  color2 =[0, 255, 0]
+              case "Green(Gene1); Blue(Gene2)": 
+                  color1 = [0, 255, 0]
+                  color2 = [0, 0, 255]
+          if input.three_d():
+            return dimred_coexprs_3d(
+                          sclive_dash.adata,
+                          dimred[0], 
+                          gene1=gene1,
+                          gene2=gene2, 
+                          expr_color1=color1,
+                          expr_color2=color2,
+                          selected_barcodes=selected_barcodes, 
+                          granularity=gran,
+                          aspectmode=cube,
+                          plt_size=plt_size_3d,
+                          pt_size=input.pt_size(),
+                          dimred_labels=dimred[1].labels_3d,
+                          axis_font_size=txt_size,
+                          ticks_font_size=ticks_font_size)
+          else:
+            return dimred_coexprs_2d(
+                          sclive_dash.adata,
+                          dimred[0], 
+                          gene1 = gene1,
+                          gene2=gene2, 
+                          expr_color1=color1,
+                          expr_color2=color2,
+                          selected_barcodes=selected_barcodes,
+                          granularity=gran,
+                          width=width,
+                          height=height,
+                          pt_size=input.pt_size(),
+                          dimred_labels=dimred[1].labels_2d,
+                          axis_font_size=txt_size,
+                          ticks_font_size=ticks_font_size)
+    
+    @output
+    @render_widget
+    def coexp_legend():
+      coexp_legend = plot_coexprs_plt()[0]
+      if coexp_legend is not None:
+        fig = px.imshow(plot_coexprs_plt()[0])
+        fig.update_xaxes(
+            showticklabels=False,
+        )
+        fig.update_yaxes(
+            showticklabels=False,
+        )
+        fig.update_traces(
+            hoverinfo='skip', hovertemplate=None,
+        )
+        return fig
+      else:
+        return None
+    
+
     @reactive.Effect
+    @reactive.event(input.main_nav, ignore_none=True)
+    def main_nav_change():
+       if input.main_nav() != "Cell Features":
+          ui.update_checkbox("true_asp_ratio", value=False)
+    
+
+    @reactive.Effect(priority=100)
     @reactive.event(input.subset_cells, ignore_none=True)
     def subset_meta_cats(): 
       meta = [k for k,v in sclive_dash.meta_infos.items() if v.name == input.subset_cells()][0]
@@ -128,6 +216,9 @@ def create_dash_server(sclive_dash):
       cube, plt_size_3d, width, height, ticks_font_size, txt_size, labels_size, legend_font_size, cont_color = get_plot_params()
       dimred = get_dimred()
       meta1 = [k for k,v in sclive_dash.meta_infos.items() if v.name == input.meta1()][0]
+      gene1 = input.gene1()
+      if meta1 not in sclive_dash.adata.obs.columns or gene1 not in sclive_dash.adata.var_names:
+        return None
       if input.plot1_type()=="Cell Information" and sclive_dash.meta_infos[meta1].meta_type == "cat":
         meta_order = sclive_dash.meta_infos[meta1].vals
       else:
@@ -135,7 +226,7 @@ def create_dash_server(sclive_dash):
       if input.three_d():
         return dimred_plt_3d(sclive_dash.adata, 
                               dimred_id=dimred[0],
-                              meta_id=input.gene1() if input.plot1_type()=="Gene Expression" else meta1,
+                              meta_id= gene1 if input.plot1_type()=="Gene Expression" else meta1,
                               is_gene_exp=input.plot1_type()=="Gene Expression",
                               meta_order=meta_order,
                               cont_color=cont_color,
@@ -151,7 +242,7 @@ def create_dash_server(sclive_dash):
       else:
         return dimred_plt_2d(sclive_dash.adata, 
                               dimred_id = dimred[0], 
-                              meta_id=input.gene1() if input.plot1_type()=="Gene Expression" else meta1,
+                              meta_id=gene1 if input.plot1_type()=="Gene Expression" else meta1,
                               is_gene_exp=input.plot1_type()=="Gene Expression",
                               meta_order=meta_order,
                               cont_color=input.color_grad(),
@@ -172,6 +263,9 @@ def create_dash_server(sclive_dash):
       cube, plt_size_3d, width, height, ticks_font_size, txt_size, labels_size, legend_font_size, cont_color = get_plot_params()
       dimred = get_dimred()
       meta2 = [k for k,v in sclive_dash.meta_infos.items() if v.name == input.meta2()][0]
+      gene2 = input.gene2()
+      if meta2 not in sclive_dash.adata.obs.columns or gene2 not in sclive_dash.adata.var_names:
+        return None
       if input.plot2_type()=="Cell Information" and sclive_dash.meta_infos[meta2].meta_type == "cat":
         meta_order = sclive_dash.sclive_dash_config["meta_info"][meta2]["vals"]
       else:
@@ -179,7 +273,7 @@ def create_dash_server(sclive_dash):
       if input.three_d():
         return dimred_plt_3d(sclive_dash.adata, 
                               dimred_id=dimred[0],
-                              meta_id=input.gene2() if input.plot2_type()=="Gene Expression" else meta2,
+                              meta_id=gene2 if input.plot2_type()=="Gene Expression" else meta2,
                               is_gene_exp=input.plot2_type()=="Gene Expression",
                               meta_order=meta_order,
                               cont_color=cont_color,
@@ -195,7 +289,7 @@ def create_dash_server(sclive_dash):
       else:
         return dimred_plt_2d(sclive_dash.adata, 
                               dimred_id = dimred[0], 
-                              meta_id=input.gene2() if input.plot2_type()=="Gene Expression" else meta2,
+                              meta_id=gene2 if input.plot2_type()=="Gene Expression" else meta2,
                               is_gene_exp=input.plot2_type()=="Gene Expression",
                               meta_order=meta_order,
                               cont_color=cont_color,
@@ -216,42 +310,48 @@ def create_dash_server(sclive_dash):
       cube, plt_size_3d, width, height, ticks_font_size, txt_size, labels_size, legend_font_size, cont_color = get_plot_params()
       dimred = get_dimred()
       meta3 = [k for k,v in sclive_dash.meta_infos.items() if v.name == input.meta3()][0]
+      gene3 = input.gene1()
+      if meta3 not in sclive_dash.adata.obs.columns or gene3 not in sclive_dash.adata.var_names:
+        return None
       if input.plot3_type()=="Cell Information" and sclive_dash.meta_infos[meta3].meta_type == "cat":
         meta_order = sclive_dash.meta_infos[meta3].vals
       else:
         meta_order = "increasing"
-      if input.three_d():
-        return dimred_plt_3d(sclive_dash.adata, 
-                              dimred_id=dimred[0],
-                              meta_id=input.gene3() if input.plot3_type()=="Gene Expression" else meta3,
-                              is_gene_exp=input.plot3_type()=="Gene Expression",
-                              cont_color=cont_color,
-                              selected_barcodes=selected_barcodes,
-                              meta_order=meta_order,
-                              labels_size=labels_size,
-                              legend_font_size=legend_font_size,
-                              aspectmode=cube,
-                              plt_size=plt_size_3d,
-                              pt_size=input.pt_size(),
-                              dimred_labels=dimred[1].labels_3d,
-                              axis_font_size=txt_size,
-                              ticks_font_size=ticks_font_size)
+      if input.plot3_type() == "Gene Coexpression":
+        return plot_coexprs_plt()[1]
       else:
-        return dimred_plt_2d(sclive_dash.adata, 
-                              dimred_id = dimred[0], 
-                              meta_id=input.gene1() if input.plot3_type()=="Gene Expression" else meta3,
-                              is_gene_exp=input.plot1_type()=="Gene Expression",
-                              meta_order=meta_order,
-                              cont_color=cont_color,
-                              selected_barcodes=selected_barcodes,
-                              labels_size=labels_size,
-                              legend_font_size=legend_font_size,
-                              width=width,
-                              height=height,
-                              pt_size=input.pt_size(),
-                              dimred_labels=dimred[1].labels_2d,
-                              axis_font_size=txt_size,
-                              ticks_font_size=ticks_font_size)
+        if input.three_d():
+          return dimred_plt_3d(sclive_dash.adata, 
+                                dimred_id=dimred[0],
+                                meta_id=gene3 if input.plot3_type()=="Gene Expression" else meta3,
+                                is_gene_exp=input.plot3_type()=="Gene Expression",
+                                cont_color=cont_color,
+                                selected_barcodes=selected_barcodes,
+                                meta_order=meta_order,
+                                labels_size=labels_size,
+                                legend_font_size=legend_font_size,
+                                aspectmode=cube,
+                                plt_size=plt_size_3d,
+                                pt_size=input.pt_size(),
+                                dimred_labels=dimred[1].labels_3d,
+                                axis_font_size=txt_size,
+                                ticks_font_size=ticks_font_size)
+        else:
+          return dimred_plt_2d(sclive_dash.adata, 
+                                dimred_id = dimred[0], 
+                                meta_id=gene3 if input.plot3_type()=="Gene Expression" else meta3,
+                                is_gene_exp=input.plot3_type()=="Gene Expression",
+                                meta_order=meta_order,
+                                cont_color=cont_color,
+                                selected_barcodes=selected_barcodes,
+                                labels_size=labels_size,
+                                legend_font_size=legend_font_size,
+                                width=width,
+                                height=height,
+                                pt_size=input.pt_size(),
+                                dimred_labels=dimred[1].labels_2d,
+                                axis_font_size=txt_size,
+                                ticks_font_size=ticks_font_size)
     
     @render.data_frame
     def df_out():
@@ -290,29 +390,34 @@ def create_dash_server(sclive_dash):
         meta_id = [k for k,v in sclive_dash.meta_infos.items() if v.name == input.dot_heat_input1()][0]
         selected_barcodes = subset_data_by_barcode()
         adata = sclive_dash.adata[selected_barcodes, :]
-        gene_list = list(set([gene for gene in map(lambda x: x.strip().upper(),re.split(r',|\n|,\n', input.dot_heat_genes())) if gene !='']))
+        gene_list = reversed(list(OrderedDict.fromkeys([gene for gene in map(lambda x: x.strip().upper(),re.split(r',|\n|,\n', input.dot_heat_genes())) if gene !=''])))
         gene_list = list(filter(lambda x: x in list(adata.var_names), gene_list))
         if len(gene_list)<2:
           return None
         
         _, _, width, height, ticks_font_size, txt_size, _, legend_font_size, cont_color = get_plot_params()
+        if height == "true_asp_ratio":
+            height = width
 
         if input.dot_heat_plot_type()=="Heatmap":
           return heatmap_plt(adata, 
                                 meta_id=meta_id,
                                 gene_list = gene_list,
+                                axis_font_size=txt_size,
+                                meta_order=sclive_dash.meta_infos[meta_id].vals,
+                                gene_order=gene_list,
                                 width=width,
                                 height=height,
                                 legend_font_size=legend_font_size,
                                 ticks_font_size=ticks_font_size,
-                                cluster_rows=input.cluster_rows(),
-                                cluster_columns=input.cluster_columns(),
                                 scale_features=input.stan_features(),
                                 cont_color=cont_color)
         else:
           return dot_plt(adata, 
                             meta_id=meta_id,
                             gene_list = gene_list,
+                            meta_order=sclive_dash.meta_infos[meta_id].vals,
+                            gene_order=gene_list,    
                             axis_font_size=txt_size,
                             ticks_font_size=ticks_font_size,
                             width=width,
@@ -329,6 +434,8 @@ def create_dash_server(sclive_dash):
         meta_id1, meta_value1 = [(k,v) for k,v in sclive_dash.meta_infos.items() if v.name == input.propt_input1()][0]
         meta_id2, meta_value2 = [(k,v) for k,v in sclive_dash.meta_infos.items() if v.name == input.propt_input2()][0]
         _, _, width, height, ticks_font_size, axis_font_size, _, _, _ = get_plot_params()
+        if height == "true_asp_ratio":
+            height = width
                 
         if meta_id1 == meta_id2 or meta_value1.meta_type != "cat" or meta_value2.meta_type != "cat":
             m = ui.modal(
@@ -344,6 +451,8 @@ def create_dash_server(sclive_dash):
                     adata,
                     x = meta_id1,
                     y = meta_id2,
+                    x_order = sclive_dash.meta_infos[meta_id1].vals,
+                    group_order = sclive_dash.meta_infos[meta_id2].vals,
                     axis_labels=[meta_value1.name, meta_value2.name],
                     stacked = input.propt_stacked(),
                     plt_type = "pct" if input.propt_plot_type() == "Proportion" else "count",
@@ -358,7 +467,9 @@ def create_dash_server(sclive_dash):
     def box_vln_plt():
         selected_barcodes = subset_data_by_barcode()
         adata = sclive_dash.adata[selected_barcodes, :]
-        _, _, width, height, ticks_font_size, txt_size, _, legend_font_size, cont_color = get_plot_params()
+        _, _, width, height, ticks_font_size, txt_size, _, legend_font_size, _ = get_plot_params()
+        if height == "true_asp_ratio":
+            height = width
         meta_id1, meta_value1 = [(k,v) for k,v in sclive_dash.meta_infos.items() if v.name == input.box_vln_input1()][0]
         meta_id3, meta_value3 = [(k,v) for k,v in sclive_dash.meta_infos.items() if v.name == input.box_vln_input3()][0]
         
@@ -380,7 +491,7 @@ def create_dash_server(sclive_dash):
         pts = input.box_vln_show_pts()
         pts = "all" if pts == "All points" else "outliers" if pts=="Outliers" else False
         
-        if (plt_type == "vln") and vln_type=="Split" and len(meta_value3.vals) != 2:
+        if (plt_type == "vln") and vln_type=="split" and len(meta_value3.vals) != 2:
           m = ui.modal(
               "Split violin plots are only available for grouping variables with two levels...",
               title="Incompatible grouping variables",
@@ -395,6 +506,8 @@ def create_dash_server(sclive_dash):
                               x_var = meta_id1,
                               meta_id = meta_id2,
                               group_by = meta_id3,
+                              x_order = sclive_dash.meta_infos[meta_id1].vals,
+                              group_order = sclive_dash.meta_infos[meta_id3].vals,
                               pts=pts,
                               vln_type=vln_type,
                               pt_size=input.pt_size(),
@@ -409,6 +522,8 @@ def create_dash_server(sclive_dash):
                             x_var = meta_id1,
                             meta_id = meta_id2,
                             group_by = meta_id3,
+                            x_order = sclive_dash.meta_infos[meta_id1].vals,
+                            group_order = sclive_dash.meta_infos[meta_id3].vals,
                             pts=pts,
                             box_type=box_type,
                             pt_size=input.pt_size(),

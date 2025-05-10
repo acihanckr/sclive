@@ -85,7 +85,17 @@ def create_dash_ui(sclive_dash):
                                              step=50,
                                         ),
 
-                                   ),
+                                    ),
+                                    ui.panel_conditional("input.layout_box == false & input.plot3_type == \"Gene Coexpression\"",
+                                        ui.row(
+                                            ui.column(12,ui.input_radio_buttons(
+                                                "coexp_colors",
+                                                "Colors (Coexpression):",
+                                                choices=["Red(Gene1); Blue(Gene2)","Orange(Gene1); Blue(Gene2)","Red(Gene1); Green(Gene2)","Green(Gene1); Blue(Gene2)"],
+                                                selected="Red(Gene1); Blue(Gene2)")
+                                            ), 
+                                        ),
+                                    ),
                                    ui.panel_conditional("input.show_txt==1",
                                         ui.input_slider(
                                              "font_size",
@@ -110,8 +120,7 @@ def create_dash_ui(sclive_dash):
                               step=50,
                               ),
                          ),
-                         ui.input_checkbox("auto_scale_height", "Autoscale the height", False),
-                         ui.panel_conditional("input.auto_scale_height ==0",
+                         
                               ui.input_slider(
                               "plt_height",
                               "Plot height:",
@@ -119,23 +128,25 @@ def create_dash_ui(sclive_dash):
                               max=2400,
                               value=600,
                               step=50,
-                              ),
-                         ),
+                              )
                     ),
-                         ui.input_checkbox("true_asp_ratio", "True aspect ratio (Dimension reduction plots)", False),
-                         ui.panel_conditional("input.true_asp_ratio==1",
-                              ui.input_slider(
-                                   "plt_size",
-                                   "Plot width:",
-                                   min=400,
-                                   max=2400,
-                                   value=600,
-                                   step=50,
-                              ),
-                         )
+                    ui.input_checkbox("true_asp_ratio", "True aspect ratio (Dimension reduction plots)", False),
+                    ui.panel_conditional("input.true_asp_ratio==1",
+                        ui.input_slider(
+                            "plt_size",
+                            "Plot width:",
+                            min=400,
+                            max=2400,
+                            value=600,
+                            step=50,
+                        ),
+                    )
                     ), 
                open=False,                    
-               ),           
+               ),
+               ui.panel_conditional("input.layout_box == false & input.plot3_type == \"Gene Coexpression\"",
+                                    ui.row(ui.input_slider("coexpr_granularity", "Granularity:", min=1, max=100, value=50, step=1)),
+                                    ui.row(ui.column(12, output_widget("coexp_legend")))),
          open='closed', width="25%"),
      ui.page_navbar(ui.nav_panel("Cell Features",
         ui.row(
@@ -265,7 +276,7 @@ def create_dash_ui(sclive_dash):
                     ui.input_select(
                                 "plot3_type",
                                 "Plot Type:",
-                                choices=["Cell Information", "Gene Expression"],
+                                choices=["Cell Information", "Gene Expression", "Gene Coexpression"],
                                 selected="Cell Information",
                     ),
                     ui.row(
@@ -288,7 +299,14 @@ def create_dash_ui(sclive_dash):
                                                        choices=sclive_dash.adata.var_names.to_list(), 
                                                         selected=sclive_dash.ui_defaults.default_gene1),
                                 )
-                              )
+                              ),
+                            ui.panel_conditional(
+                                "input.plot3_type == \"Gene Coexpression\"",
+                                ui.column(6,
+                                    ui.input_selectize("gene_coex1", "First Gene Name:", choices=sclive_dash.adata.var_names.to_list(), selected=sclive_dash.ui_defaults.default_gene2),
+                                    ui.input_selectize("gene_coex2", "Second Gene Name:", choices=sclive_dash.adata.var_names.to_list(), selected=sclive_dash.ui_defaults.default_gene3),
+                                )
+                            ),
                         ),
                     ),
                     output_widget("dimred_plot3"),
@@ -330,7 +348,6 @@ def create_dash_ui(sclive_dash):
             value="plt_options"), id="box_vln_nav")),ui.br(), ui.br(),
             ui.row(
                     ui.column(12, output_widget("box_vln_plt")),
-                    ui.column(12, output_widget("box_vln_df")),
             )
         ),
         ui.nav_panel("Proportion Plot",
@@ -359,17 +376,13 @@ def create_dash_ui(sclive_dash):
                     ui.input_radio_buttons("dot_heat_plot_type", "Plot type:", 
                             choices = ["Dot plot", "Heatmap"], 
                             selected = "Dot plot", inline = True),
-                    ui.panel_conditional(
-                        "input.dot_heat_plot_type == \"Heatmap\"",
-                        ui.input_checkbox("cluster_rows", "Cluster Rows", False),
-                        ui.input_checkbox("cluster_columns", "Cluster Columns", False)),
                         ui.input_checkbox("stan_features", "Standardize Features", False),
                     style="border-right: 2px solid black"), 
                     ui.column(6, ui.input_text_area("dot_heat_genes", "Gene list:",height="200px", value=",\n".join(sclive_dash.ui_defaults.default_genes_list)),))
                         ,value="plt_options"), id="dot_heat_nav")),ui.br(), ui.br(), 
                 ui.row(ui.column(12, output_widget("dot_heat_plot_out"))
             )
-        )   
+        ), id="main_nav",   
      )
     )
     return sclive_ui
