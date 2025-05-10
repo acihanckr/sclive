@@ -5,8 +5,12 @@ adata = read_h5ad("test_data/pbmc.h5ad")
 
 def test_violin_plt(scanpy_std_pipeline):
     violin_plt(adata, "leiden", "n_genes").write_html("fig.html")
+    violin_plt(adata, "leiden", "n_genes", x_order=["0", "1", "2", "3", "4", "5", "6"]).write_html("fig.html")
     violin_plt(adata, "leiden", "n_genes", "fake_cats", vln_type="grouped").write_html("fig.html")
+    violin_plt(adata, "leiden", "n_genes", "fake_cats", vln_type="grouped", group_order=["B", "A", "C"]).write_html("fig.html")
     violin_plt(adata, "leiden", "n_genes", "fake_dogs", vln_type="split", legend_font_size = 12).write_html("fig.html")
+    violin_plt(adata, "leiden", "n_genes", "fake_dogs", vln_type="split", group_order=["Bet", "ALp"]).write_html("fig.html")
+    violin_plt(adata, "leiden", "n_genes", "fake_dogs", vln_type="split", group_order=["ALp", "Bet"]).write_html("fig.html")
     violin_plt(adata, "leiden", "n_genes", "fake_dogs", pts="all", vln_type="split").write_html("fig.html")
     violin_plt(adata, "leiden", "n_genes", pts="all", vln_type="split", jitter=0.5).write_html("fig.html")
     violin_plt(adata, "leiden", "n_genes", "fake_cats", vln_type="grouped", pts="all").write_html("fig.html")

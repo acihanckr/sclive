@@ -5,6 +5,9 @@ adata = read_h5ad("test_data/pbmc.h5ad")
 
 def test_box_plt(scanpy_std_pipeline):
     box_plt(adata, "leiden", "n_genes").write_html("fig.html")
+    box_plt(adata, "leiden", "n_genes", x_order=["0", "1", "2", "3", "4", "5", "6"]).write_html("fig.html")
+    box_plt(adata, "leiden", "n_genes", "fake_cats", box_type="grouped", group_order=["B", "A", "C"]).write_html("fig.html")
+    box_plt(adata, "leiden", "n_genes", "fake_cats", box_type="grouped", x_order=["0", "1", "2", "3", "4", "5", "6"], group_order=["B", "A", "C"]).write_html("fig.html")
     box_plt(adata, "leiden", "n_genes", "fake_cats", box_type="grouped").write_html("fig.html")
     box_plt(adata, "leiden", "n_genes", pts="all").write_html("fig.html")
     box_plt(adata, "leiden", "n_genes", "fake_cats", box_type="grouped", pts="all").write_html("fig.html")

@@ -11,6 +11,8 @@ def dot_plt(adata: AnnData,
             gene_list:List[str],
             use_raw:Optional[bool]=False,
             layer:Optional[str]=None,
+            meta_order:Optional[List[str]]=None,
+            gene_order:Optional[List[str]]=None,    
             ticks_font_size:Optional[int]=12,
             width:Optional[int|str]="auto", 
             height:Optional[int|str]="auto", 
@@ -35,6 +37,10 @@ def dot_plt(adata: AnnData,
     either to use raw gene counts
   :param layer: 
     which layer to extract the gene expressions from
+  :param meta_order:
+    order of the meta categories. If None, the order will be random
+  :param gene_order:
+    order of the genes. If None, the order will be random
   :param ticks_font_size: 
     size of tick labels on x and y axis 
   :param width: 
@@ -71,6 +77,7 @@ def dot_plt(adata: AnnData,
   means = means.unpivot(index = meta_id, variable_name = "Genes", value_name = "Gene Expression")
   percs = percs.unpivot(index = meta_id, variable_name = "Genes", value_name = "Expressed Percentage")
 
+    
   fig = px.scatter(means.join(percs, on=[meta_id, "Genes"]), x=meta_id, y = "Genes",
 	         size="Expressed Percentage", color="Gene Expression", color_continuous_scale=cont_color)
   if legend_font_size is not None:
@@ -81,6 +88,11 @@ def dot_plt(adata: AnnData,
                                             "tickfont":{
                                                 "size":legend_font_size
                                             }})
+  if meta_order is not None:
+       fig.update_xaxes(categoryorder='array', categoryarray= meta_order)
+  if gene_order is not None:
+       fig.update_yaxes(categoryorder='array', categoryarray= gene_order)
+  
   if title_size is not None and title is None:
         title = f"{meta_id} Gene Expressions Dotplot"
   if axis_font_size is not None and axis_labels is None:

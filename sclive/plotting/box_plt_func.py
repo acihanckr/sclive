@@ -15,6 +15,8 @@ def box_plt(adata,
             box_type:Optional[str]=None, 
             pts:str|bool=False, 
             pt_size:Optional[int]=4,
+            x_order:Optional[List[str]]=None,
+            group_order:Optional[List[str]]=None,
             legend_font_size:Optional[int]=None,
             legend_title:Optional[str]=None,
             ticks_font_size:Optional[int]=12,
@@ -45,6 +47,10 @@ def box_plt(adata,
         either to draw data points. Options: 'all', 'outliers', False
     :param pt_size: 
         point size if data points are drawn. If None no points will be drawn.
+    :param x_order:
+      order of the x-axis categories. If None, the order will be random
+    :param group_order:
+      order of the grouping categories. If None, the order will be random
     :param legend_font_size: 
         font size for legend. If set to False, legend will be hidden.
     :param legend_title: 
@@ -82,19 +88,24 @@ def box_plt(adata,
         warnings.warn("Group by variable is not provided. Box plot type will be set to single!")
         box_type = "single"
     
+    if x_order is None:
+        x_order = plotting_data[x_var].unique().to_list()
+    if group_by is not None and group_order is None:
+        group_order = plotting_data[group_by].unique().to_list()
     fig = go.Figure()
     if box_type=="single":
-        for i in plotting_data[x_var].unique():
+        for i in x_order:
             fig.add_trace(go.Box(x=plotting_data.filter(pl.col(x_var) == i)[x_var],
                             y=plotting_data.filter(pl.col(x_var) == i)[meta_id],
                                 name=str(i), marker=dict(size=pt_size),
                                 boxpoints=pts))
     elif box_type=="grouped":
-        for i in plotting_data[group_by].unique():
+        for i in group_order:
             fig.add_trace(go.Box(x=plotting_data.filter(pl.col(group_by) == i)[x_var],
                             y=plotting_data.filter(pl.col(group_by) == i)[meta_id],
                                 name=str(i), marker=dict(size=pt_size),
                                 boxpoints=pts))
+            fig.update_xaxes(categoryorder='array', categoryarray= x_order)
             fig.update_layout(boxmode="group")
     
     if title_size is not None and title is None:

@@ -10,7 +10,9 @@ def prop_plt(adata: AnnData,
             y:str, 
             stacked:Optional[bool]=True, 
             plt_type:Optional[str]="count", 
-            coord_flip:Optional[bool]=False, 
+            coord_flip:Optional[bool]=False,
+            x_order:Optional[List[str]]=None,
+            group_order:Optional[List[str]]=None,
             ticks_font_size:Optional[int]=12,
             width:Optional[int|str]="auto", 
             height:Optional[int|str]="auto", 
@@ -34,6 +36,10 @@ def prop_plt(adata: AnnData,
       either to plot proportions or counts. Options: 'count', 'pct'
     :param coord_flip: 
       either to flip the coordinates
+    :param x_order:
+      order of the x-axis categories. If None, the order will be random
+    :param group_order:
+      order of the grouping/stacking categories. If None, the order will be random
     :param ticks_font_size: 
       size of tick labels on x and y axis 
     :param width: 
@@ -77,6 +83,10 @@ def prop_plt(adata: AnnData,
         fig.update_layout(xaxis_title="", yaxis_title="")
     if axis_labels is None and axis_font_size is not None:
        axis_labels = [x,y]
+    if x_order is not None:
+       fig.update_xaxes(categoryorder='array', categoryarray= x_order)
+    if group_order is not None:
+       fig.update_yaxes(categoryorder='array', categoryarray= group_order)
     fig = set_2d_layout(fig, ticks_font_size, axis_labels = axis_labels,
                   axis_font_size=axis_font_size,
                   legend_font_size=None,
