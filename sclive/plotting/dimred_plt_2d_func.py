@@ -58,6 +58,7 @@ def dimred_plt_2d(adata: AnnData,
         color gradient scale for continuous cell meta or gene expression. Can be anything Plotly graph object accepts
     :param meta_order: 
         order of cell meta feature categories. This determines the order traces are added to figure and may cause some points covering other.
+        It accepts "increasing" or "decreasing" for continuous meta data.
     :param meta_colors: 
         colors to use for categorical obs meta. If not provided it will be set randomly using distinctpy library
     :param title: 
@@ -115,9 +116,14 @@ def dimred_plt_2d(adata: AnnData,
         fig = go.Figure()
 
     #set meta order list
-    if cat and meta_order is None:
+    if not cat:
+        if meta_order == "increasing":
+            plotting_data = plotting_data.sort(meta_id)
+        elif meta_order == "decreasing":
+            plotting_data = plotting_data.sort(meta_id, reverse=True)
+    elif cat and meta_order is None:
         meta_order = plotting_data[meta_id].cat.get_categories().to_list()
-    elif meta_order is not None:
+    else:
         meta_order = list(set(meta_order))
         if any([mt not in plotting_data[meta_id].cat.get_categories() for mt in meta_order]):
             raise(ValueError("Given meta cannot be found in the data!"))

@@ -10,6 +10,7 @@
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
         "eamodio.gitlens",
-        "ritwickdey.LiveServer"
+        "ritwickdey.LiveServer",
+        "Posit.shiny"
     ]
 }

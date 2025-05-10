@@ -6,6 +6,8 @@ adata = read_h5ad("test_data/pbmc.h5ad")
 def test_prop_plt(scanpy_std_pipeline):
     prop_plt(adata, "leiden", "leiden", plt_type="pct").write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="pct").write_html("fig.html")
+    prop_plt(adata, "leiden", "fake_cats", plt_type="pct", x_order=["0", "1", "2", "3", "4", "5", "6"]).write_html("fig.html")
+    prop_plt(adata, "leiden", "fake_cats", plt_type="pct", x_order=["0", "1", "2", "3", "4", "5", "6"], group_order=["C","A", "B"]).write_html("fig.html")
     prop_plt(adata, "fake_dogs", "fake_dogs", plt_type="count").write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count").write_html("fig.html")
     prop_plt(adata, "leiden", "fake_cats", plt_type="count", stacked=False).write_html("fig.html")

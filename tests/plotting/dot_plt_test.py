@@ -6,6 +6,11 @@ adata = read_h5ad("test_data/pbmc.h5ad")
 
 def test_dot_plt(scanpy_std_pipeline):
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"]).write_html("fig.html")
+    dot_plt(adata, "leiden", ["CST3", "SLC39A3"], meta_order=["0", "1", "2", "3", "4", "5", "6"]).write_html("fig.html")
+    dot_plt(adata, "leiden", ["CST3", "SLC39A3"], meta_order=["0", "1", "2", "3", "4", "5", "6"], gene_order=["SLC39A3", "CST3"]).write_html("fig.html")
+    dot_plt(adata, "leiden", ["CST3", "SLC39A3"], meta_order=["0", "1", "2", "3", "4", "5", "6"], gene_order=["CST3", "SLC39A3"]).write_html("fig.html")
+    dot_plt(adata, "leiden", ["CST3", "SLC39A3"], gene_order=["CST3", "SLC39A3"]).write_html("fig.html")
+    dot_plt(adata, "leiden", ["CST3", "SLC39A3"], gene_order=["SLC39A3", "CST3"]).write_html("fig.html")
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], axis_font_size=40).write_html("fig.html")
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], axis_font_size=40, axis_labels=["Gene Expressions", "Meta Data"]).write_html("fig.html")
     dot_plt(adata, "leiden", ["CST3", "SLC39A3"], scale_features=True).write_html("fig.html")

@@ -17,6 +17,8 @@ def violin_plt(adata: AnnData,
             pts:str|bool=False, 
             pt_size:Optional[int]=4,
             jitter:Optional[float]=0.05,
+            x_order:Optional[List[str]]=None,
+            group_order:Optional[List[str]]=None,
             legend_font_size:Optional[int]=None,
             legend_title:Optional[str]=None,
             ticks_font_size:Optional[int]=12,
@@ -49,6 +51,10 @@ def violin_plt(adata: AnnData,
         point size if data points are drawn. If None no points will be drawn.
     :param jitter: 
         jitter parameter for violine points
+    :param x_order:
+      order of the x-axis categories. If None, the order will be random
+    :param group_order:
+      order of the grouping categories. If None, the order will be random
     :param legend_font_size: 
         the size of legend. If None legend will not be drawn
     :param legend_title: 
@@ -87,29 +93,33 @@ def violin_plt(adata: AnnData,
         warnings.warn("Group by variable is not provided. Violin plot type will be set to single!")
         vln_type = "single"
     
+    if x_order is None:
+        x_order = plotting_data[x_var].unique().to_list()
+    if group_by is not None and group_order is None:
+        group_order = plotting_data[group_by].unique().to_list()
     fig = go.Figure()
     if vln_type=="single":
-        for i in plotting_data[x_var].unique():
+        for i in x_order:
             fig.add_trace(go.Violin(x=plotting_data.filter(pl.col(x_var) == i)[x_var],
                             y=plotting_data.filter(pl.col(x_var) == i)[meta_id],
                             marker=dict(size=pt_size),
                             points=pts, name=str(i)))
     elif vln_type=="grouped":
-        for i in plotting_data[group_by].unique():
+        for i in group_order:
             fig.add_trace(go.Violin(x=plotting_data.filter(pl.col(group_by) == i)[x_var],
                             y=plotting_data.filter(pl.col(group_by) == i)[meta_id],
                             marker=dict(size=pt_size),
                             points=pts, name=str(i)))
         fig.update_layout(violinmode="group")
     elif vln_type=="split":
-        if len(plotting_data[group_by].unique()) != 2:
+        if len(group_order) != 2:
             warnings.warn("The group_by variable has more than 2 levels while vln_type is set to split")
             return fig
         else:
             showlegend = True
-            groups = plotting_data[group_by].unique().to_list()
-            xs = plotting_data[x_var].unique().to_list()
-            for i in range(plotting_data.unique(x_var).shape[0]):
+            groups = group_order
+            xs = x_order
+            for i in range(len(xs)):
                 fig.add_trace(go.Violin(x=plotting_data.filter((pl.col(group_by) == groups[0])&(pl.col(x_var) == xs[i]))[x_var].to_list(),
                             y=plotting_data.filter((pl.col(group_by) == groups[0])&(pl.col(x_var) == xs[i]))[meta_id].to_list(),
                             legendgroup=groups[0], scalegroup=groups[0], name=groups[0],
@@ -138,6 +148,7 @@ def violin_plt(adata: AnnData,
         axis_labels = [x_var, meta_id]
     if legend_font_size is not None and legend_title is None:
         legend_title = f'{meta_id} Box Plot'
+    
     fig = set_2d_layout(fig, 
                         ticks_font_size=ticks_font_size,
                         axis_font_size=axis_font_size,
