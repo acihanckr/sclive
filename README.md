@@ -3,8 +3,7 @@ ScLive provides interactive and highly customizable plots commonly used in singl
 It also has live_dash module to create single cell analysis dashboards from anndata objects.
 The resulting dashboard allows to customize various aspects of the plot using an user interface.
 
-ScLive can be installed using pip
-
+ScLive can be installed using pip:
 ```bash 
 pip install sclive
 ```
