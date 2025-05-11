@@ -19,3 +19,6 @@ def test_box_plt(scanpy_std_pipeline):
     create_dash_app(sclive_dash)
 
 ```
+
+This code will create a Shiny app which can be deployed on a server supporting Shiny apps or using [Shiny server](<https://posit.co/products/open-source/shiny-server/>).
+It can also be run locally using VS Code [Shiny extension](https://marketplace.visualstudio.com/items?itemName=posit.shiny>).
