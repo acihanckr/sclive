@@ -18,4 +18,4 @@ app = create_dash_app(ScLiveDash(adata))
 This code will create a Shiny app which can be deployed on a server supporting Shiny apps or using [Shiny server](https://posit.co/products/open-source/shiny-server).
 It can also be run locally using VS Code [Shiny extension](https://marketplace.visualstudio.com/items?itemName=posit.shiny).
 
-An example output of ScLive Dashboard is available at [PBMC Data Dashboard]([https://cakarcihan.shinyapps.io/pbmc/])
+An example output of ScLive Dashboard is available at [PBMC Data Dashboard](https://cakarcihan.shinyapps.io/pbmc/)
